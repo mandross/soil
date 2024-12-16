@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Submit Location & Text</title>
+</head>
+<body>
+  <h1>Submit Data</h1>
+  <p id="status">Getting location...</p>
+  <form id="dataForm">
+    <input type="text" id="customText" maxlength="100" placeholder="Enter up to 100 chars" required />
+    <button type="submit" id="sendBtn" disabled>Send</button>
+  </form>
+  <script>
+    let currentLocation = null;
+    navigator.geolocation.getCurrentPosition(pos => {
+      currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      document.getElementById('status').textContent = `Location: ${currentLocation.lat}, ${currentLocation.lng}`;
+      document.getElementById('sendBtn').disabled = false;
+    }, () => {
+      document.getElementById('status').textContent = 'Unable to get location.';
+    });
+
+    document.getElementById('dataForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      if(!currentLocation) return alert('No location data.');
+      const text = document.getElementById('customText').value;
+      try {
+        const res = await fetch('/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ location: currentLocation, text })
+        });
+        if(res.ok) {
+          alert('Submitted successfully!');
+          document.getElementById('customText').value = '';
+        } else {
+          alert('Submission failed.');
+        }
+      } catch(err) {
+        console.error(err);
+        alert('Error submitting data.');
+      }
+    });
+  </script>
+</body>
+</html>
